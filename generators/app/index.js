@@ -11,6 +11,20 @@ const SERVER_MAIN_SRC_DIR = jhipsterConstants.SERVER_MAIN_SRC_DIR;
 const serverFiles = {
     server: [
         {
+            condition: generator => generator.applicationType !== 'uaa',
+            path: SERVER_MAIN_SRC_DIR,
+            templates: [
+                {
+                    file: 'package/web/rest/AuthorityIndexResource.java',
+                    renameTo: generator =>
+                        `${
+                            generator.packageFolder
+                        }/web/rest/AuthorityIndexResource.java`
+                }
+            ]
+        },
+        {
+            condition: generator => generator.applicationType === 'uaa',
             path: SERVER_MAIN_SRC_DIR,
             templates: [
                 {
@@ -19,6 +33,32 @@ const serverFiles = {
                         `${
                             generator.packageFolder
                         }/web/rest/AuthorityResource.java`
+                }
+            ]
+        },
+        {
+            condition: generator => generator.applicationType === 'uaa',
+            path: SERVER_MAIN_SRC_DIR,
+            templates: [
+                {
+                    file: 'package/web/rest/vm/ManagedUsersAuthorityVM.java',
+                    renameTo: generator =>
+                        `${
+                            generator.packageFolder
+                        }/web/rest/vm/ManagedUsersAuthorityVM.java`
+                }
+            ]
+        },
+        {
+            condition: generator => generator.applicationType === 'uaa',
+            path: SERVER_MAIN_SRC_DIR,
+            templates: [
+                {
+                    file: 'package/service/AuthorityService.java',
+                    renameTo: generator =>
+                        `${
+                            generator.packageFolder
+                        }/service/AuthorityService.java`
                 }
             ]
         }
@@ -75,23 +115,25 @@ module.exports = class extends BaseGenerator {
     }
 
     writing() {
+        if (this.skipServer) return;
+
         // read config from .yo-rc.json
         this.baseName = this.jhipsterAppConfig.baseName;
-        this.uaaBaseName = this.jhipsterAppConfig.uaaBaseName;
         this.packageName = this.jhipsterAppConfig.packageName;
         this.packageFolder = this.jhipsterAppConfig.packageFolder;
         this.clientFramework = this.jhipsterAppConfig.clientFramework;
         this.clientPackageManager = this.jhipsterAppConfig.clientPackageManager;
         this.buildTool = this.jhipsterAppConfig.buildTool;
-        this.uaaClassifyBaseName = utils.classify(this.uaaBaseName);
         this.upperCaseBaseName = this.baseName.toUpperCase();
+        this.applicationType = this.jhipsterAppConfig.applicationType;
 
         // use function in generator-base.js from generator-jhipster
         this.angularAppName = this.getAngularAppName();
 
-        if (this.skipServer) return;
-
-        // write server side files
+        if (this.applicationType !== 'uaa') {
+            this.uaaBaseName = this.jhipsterAppConfig.uaaBaseName;
+            this.uaaClassifyBaseName = utils.classify(this.uaaBaseName);
+        }
         this.writeFilesToDisk(serverFiles, this, false);
     }
 

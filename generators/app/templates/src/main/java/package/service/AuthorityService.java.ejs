@@ -1,0 +1,65 @@
+package <%=packageName%>.service;
+
+import <%=packageName%>.domain.Authority;
+import <%=packageName%>.domain.User;
+import <%=packageName%>.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cache.CacheManager;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+/**
+ * Service class for managing users.
+ */
+@Service
+@Transactional
+public class AuthorityService {
+
+    private final Logger log = LoggerFactory.getLogger(AuthorityService.class);
+
+    private final UserRepository userRepository;
+
+    private final CacheManager cacheManager;
+
+    public AuthorityService(UserRepository userRepository, CacheManager cacheManager) {
+        this.userRepository = userRepository;
+        this.cacheManager = cacheManager;
+    }
+
+    private void clearUserCaches(User user) {
+        Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE)).evict(user.getLogin());
+        Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE)).evict(user.getEmail());
+    }
+
+    /**
+     * Batch modify users authorities
+     *
+     * @param targetUsers       target user's id
+     * @param sourceAuthorities source authorities
+     * @param targetAuthorities target authorities
+     */
+    public void modifyAuthorities(Set<String> targetUsers, Set<String> sourceAuthorities, Set<String> targetAuthorities) {
+        List<User> users = userRepository.findAllWithAuthoritiesByLogin(targetUsers);
+        Set<Authority> target = targetAuthorities.stream().map(name -> {
+            Authority authority = new Authority();
+            authority.setName(name);
+            return authority;
+        }).collect(Collectors.toSet());
+        users = users.stream().peek(user -> {
+            Set<Authority> authorities = user.getAuthorities();
+            authorities =
+                authorities.stream().filter(authority -> !sourceAuthorities.contains(authority.getName()))
+                    .collect(Collectors.toSet());
+            authorities.addAll(target);
+            user.setAuthorities(authorities);
+            this.clearUserCaches(user);
+        }).collect(Collectors.toList());
+        userRepository.saveAll(users);
+    }
+}

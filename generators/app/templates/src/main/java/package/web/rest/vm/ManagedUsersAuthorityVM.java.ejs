@@ -1,0 +1,37 @@
+package <%=packageName%>.web.rest.vm;
+
+import java.util.Set;
+
+/**
+ * View Model which is meant to be used in the batch modify user authority.
+ */
+public class ManagedUsersAuthorityVM {
+
+    private Set<String> targetUsers;
+    private Set<String> sourceAuthorities;
+    private Set<String> targetAuthorities;
+
+    public Set<String> getTargetUsers() {
+        return targetUsers;
+    }
+
+    public void setTargetUsers(Set<String> targetUsers) {
+        this.targetUsers = targetUsers;
+    }
+
+    public Set<String> getSourceAuthorities() {
+        return sourceAuthorities;
+    }
+
+    public void setSourceAuthorities(Set<String> sourceAuthorities) {
+        this.sourceAuthorities = sourceAuthorities;
+    }
+
+    public Set<String> getTargetAuthorities() {
+        return targetAuthorities;
+    }
+
+    public void setTargetAuthorities(Set<String> targetAuthorities) {
+        this.targetAuthorities = targetAuthorities;
+    }
+}
